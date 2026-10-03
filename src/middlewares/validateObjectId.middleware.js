@@ -9,5 +9,15 @@ import mongoose from 'mongoose';
  * 3. If valid: call next()
  */
 export function validateObjectId(req, res, next) {
-  // Your code here
+  const id = req.params.id;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      error: {
+        message: 'Invalid id format',
+      },
+    });
+  }
+
+  next();
 }

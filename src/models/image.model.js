@@ -25,19 +25,71 @@ import mongoose from 'mongoose';
  * - Text index on originalName and description for search
  */
 
-const imageSchema = new mongoose.Schema(
-  {
-    // Your schema fields here
+const imageSchema = new mongoose.Schema({
+  originalName: {
+    type: String,
+    required: true,
+    trim: true,
+    maxLength: 255,
   },
-  {
-    // Schema options here
-  }
-);
+  filename: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  mimetype: {
+    type: String,
+    required: true,
+    enum: ["image/jpeg", "image/png", "image/gif"],
+  },
+  size: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 5 * 1024 * 1024, // 5 MB
+  },
+  width: {
+    type: Number,
+    required: true,
+    min: 1,
+  },
+  height: {
+    type: Number,
+    required: true,
+    min: 1,
+  },
+  thumbnailFilename: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: false,
+    trim: true,
+    maxLength: 500,
+    default: ''
+  },
+  tags: {
+    type: [String],
+    required: false,
+    default: [],
+    validate: {
+      validator: function (arr) {
+        return arr.length <= 10;
+      },
+      message: 'Cannot have more than 10 tags'
+    },
+  },
+  uploadDate: {
+    type: Date,
+    default: Date.now
+  },
+}, { timestamps: true });
 
 // TODO: Add indexes
-// imageSchema.index({ uploadDate: -1 });
-// imageSchema.index({ mimetype: 1, uploadDate: -1 });
-// imageSchema.index({ originalName: 'text', description: 'text' });
+imageSchema.index({ uploadDate: -1 });
+imageSchema.index({ mimetype: 1, uploadDate: -1 });
+imageSchema.index({ originalName: 'text', description: 'text' });
 
 // TODO: Create and export the Image model
-// export const Image = mongoose.model('Image', imageSchema);
+export const Image = mongoose.model('Image', imageSchema);

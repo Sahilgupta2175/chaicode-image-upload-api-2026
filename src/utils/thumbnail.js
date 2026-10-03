@@ -1,4 +1,5 @@
 import sharp from 'sharp';
+import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -35,7 +36,31 @@ const THUMBNAILS_DIR = path.join(__dirname, '../../uploads/thumbnails');
  * // Creates: uploads/thumbnails/thumb-1704067200000-abc123.jpg
  */
 export async function generateThumbnail(filename) {
-  // Your code here
+  const inputPath = path.join(__dirname, "../../uploads", filename);
+  const thumbnailName = `thumb-${filename.replace(/\.\w+$/, ".jpg")}`;
+  const outputPath = path.join(THUMBNAILS_DIR, thumbnailName);
+
+  const thumbnailBuffer = await sharp(inputPath)
+    .resize(200, 200, {
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .jpeg({
+      quality: 80,
+    })
+    .toBuffer();
+
+  const originalBuffer = await fs.readFile(inputPath);
+  const { format, width, height } = await sharp(originalBuffer).metadata();
+  const isSmallJpeg = format === "jpeg" && width <= 200 && height <= 200;
+
+  if (isSmallJpeg && originalBuffer.length < thumbnailBuffer.length) {
+    await fs.writeFile(outputPath, originalBuffer);
+  } else {
+    await fs.writeFile(outputPath, thumbnailBuffer);
+  }
+
+  return thumbnailName;
 }
 
 /**
@@ -58,5 +83,8 @@ export async function generateThumbnail(filename) {
  * // Returns: { width: 1920, height: 1080 }
  */
 export async function getImageDimensions(filepath) {
-  // Your code here
+  const imgInfo = await sharp(filepath).metadata();
+  const { width, height } = imgInfo;
+
+  return { width: Number(width), height: Number(height) };
 }
